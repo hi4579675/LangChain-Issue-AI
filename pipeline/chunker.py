@@ -13,17 +13,18 @@ class Chunk:
     metadata: dict = field(default_factory=dict)
 
 def split_into_chunks(text: str, issue_number: int) -> list[Chunk]:
+    """텍스트를 앞에서부터 스캔하면서 코드블록을 기준으로 쪼갭"""
     chunks, last_end = [], 0
     for match in CODE_BLOCK_RE.finditer(text):
-        before = text[last_end:match.start()].strip()
+        before = text[last_end:match.start()].strip() # ← 코드블록 앞 텍스트
         if before:
             chunks.extend(_split_text(before, issue_number))
-        code = match.group(2).strip()
+        code = match.group(2).strip() # ← 코드 내용
         if code:
             chunks.append(Chunk(content=code, chunk_type="code",
                                 language=match.group(1) or "unknown",
                                 metadata={"issue_number": issue_number, "weight": 1.5}))
-        last_end = match.end()
+        last_end = match.end()  # ← 마지막 코드블록 뒤 텍스트
     tail = text[last_end:].strip()
     if tail:
         chunks.extend(_split_text(tail, issue_number))

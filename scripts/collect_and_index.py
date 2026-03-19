@@ -22,7 +22,13 @@ def main():
     store  = VectorStore(dsn=os.environ["DATABASE_URL"])
 
     try:
-        for raw_issue in tqdm(fetch_issues(gh, max_pages=20), desc="이슈 처리"):
+        indexed = store.get_indexed_issue_numbers()
+        print(f"이미 인덱싱된 이슈: {len(indexed)}개 — 스킵")
+
+        for raw_issue in tqdm(fetch_issues(gh, max_pages=35), desc="이슈 처리"):
+            if raw_issue.number in indexed:
+                continue
+
             comments = fetch_comments(gh, raw_issue.number)
             cleaned  = make_cleaned_issue(raw_issue, comments)
             if not cleaned:

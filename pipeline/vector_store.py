@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS chunks_unique_idx
-    ON chunks (issue_number, chunk_type, content);
+    ON chunks (issue_number, chunk_type, md5(content));
 CREATE INDEX IF NOT EXISTS chunks_embedding_idx
     ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 """
@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS chunks_embedding_idx
 UPSERT_SQL = """
 INSERT INTO chunks (issue_number, chunk_type, language, content, embedding, weight, is_solution, issue_created_at)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-ON CONFLICT (issue_number, chunk_type, content) DO UPDATE
+ON CONFLICT (issue_number, chunk_type, md5(content)) DO UPDATE
     SET embedding        = EXCLUDED.embedding,
         weight           = EXCLUDED.weight,
         is_solution      = EXCLUDED.is_solution,
@@ -56,6 +56,15 @@ class VectorStore:
         self.conn = psycopg2.connect(**_parse_dsn(dsn))
         with self.conn.cursor() as cur:
             cur.execute(CREATE_SQL)
+            cur.execute("""
+                ALTER TABLE chunks
+                ADD COLUMN IF NOT EXISTS issue_created_at TIMESTAMP;
+            """)
+            cur.execute("""
+                DROP INDEX IF EXISTS chunks_unique_idx;
+                CREATE UNIQUE INDEX IF NOT EXISTS chunks_unique_idx
+                    ON chunks (issue_number, chunk_type, md5(content));
+            """)
         self.conn.commit()
 
     def upsert(self, chunks: list[Chunk], vectors: list[list[float]],
@@ -68,6 +77,12 @@ class VectorStore:
                   c.content, vec, c.metadata.get("weight", 1.0), is_solution, issue_created_at)
                  for c, vec in zip(chunks, vectors)])
         self.conn.commit()
+
+    def get_indexed_issue_numbers(self) -> set[int]:
+        """이미 DB에 있는 issue_number 집합 반환"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT issue_number FROM chunks;")
+            return {row[0] for row in cur.fetchall()}
 
     def search(self, query_vector: list[float], top_k: int = 10) -> list[dict]:
         """코사인 유사도 기준 top_k 청크 반환"""
