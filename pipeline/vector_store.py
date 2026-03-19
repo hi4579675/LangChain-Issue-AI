@@ -1,6 +1,14 @@
 """pgvector 기반 벡터 저장소 — Java Repository 레이어와 동일"""
 import psycopg2, psycopg2.extras
+from urllib.parse import urlparse
 from .chunker import Chunk
+
+
+def _parse_dsn(dsn: str) -> dict:
+    """DSN URL을 psycopg2 keyword 인자로 변환 (Windows 한글 환경 인코딩 오류 우회)"""
+    p = urlparse(dsn)
+    return dict(host=p.hostname, port=p.port or 5432,
+                dbname=p.path.lstrip("/"), user=p.username, password=p.password)
 
 CREATE_SQL = """
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -42,7 +50,7 @@ LIMIT %s;
 
 class VectorStore:
     def __init__(self, dsn: str):
-        self.conn = psycopg2.connect(dsn)
+        self.conn = psycopg2.connect(**_parse_dsn(dsn))
         with self.conn.cursor() as cur:
             cur.execute(CREATE_SQL)
         self.conn.commit()

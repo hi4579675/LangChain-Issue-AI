@@ -14,8 +14,9 @@ async def query_issues(req: QueryRequest, request: Request):
 
     # 1. 질문 임베딩
     query_vector = state.gemini.models.embed_content(
-        model="text-embedding-004",
+        model="models/gemini-embedding-001",
         contents=[req.question],
+        config={"output_dimensionality": 768},
     ).embeddings[0].values
 
     # 2. 하이브리드 검색
@@ -32,7 +33,7 @@ async def query_issues(req: QueryRequest, request: Request):
         f"[Issue #{r.issue_number}]\n{r.content}" for r in results
     )
     llm_response = state.gemini.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=f"{SYSTEM_PROMPT}\n\nContext:\n{context}\n\nQuestion: {req.question}",
     )
 

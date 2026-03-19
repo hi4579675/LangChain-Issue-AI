@@ -37,7 +37,7 @@ class HybridRetriever:
                 chunk_type=r["chunk_type"],
                 is_solution=r["is_solution"],
                 issue_url=f"https://github.com/{REPO}/issues/{r['issue_number']}",
-                score=r["vscore"] * r["weight"] * r["kw"] * (1.2 if r["is_solution"] else 1.0),
+                score=float(r["vscore"]) * float(r["weight"]) * float(r["kw"]) * (1.2 if r["is_solution"] else 1.0),
             )
             for r in rows
         ]
