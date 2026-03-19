@@ -31,7 +31,8 @@ def main():
             for text, is_sol in [(cleaned.question, False), (cleaned.solution, True)]:
                 chunks  = split_into_chunks(text, cleaned.issue_number)
                 vectors = embed_chunks(chunks, gemini)
-                store.upsert(chunks, vectors, is_solution=is_sol)
+                store.upsert(chunks, vectors, is_solution=is_sol,
+                             issue_created_at=cleaned.created_at)
 
             print(f"Issue #{cleaned.issue_number} 완료")
     finally:

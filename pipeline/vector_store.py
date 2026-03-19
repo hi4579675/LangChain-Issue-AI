@@ -1,4 +1,5 @@
 """pgvector 기반 벡터 저장소 — Java Repository 레이어와 동일"""
+import datetime
 import psycopg2, psycopg2.extras
 from urllib.parse import urlparse
 from .chunker import Chunk
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     embedding vector(768),
     weight FLOAT DEFAULT 1.0,
     is_solution BOOLEAN DEFAULT FALSE,
+    issue_created_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS chunks_unique_idx
@@ -31,12 +33,13 @@ CREATE INDEX IF NOT EXISTS chunks_embedding_idx
 """
 
 UPSERT_SQL = """
-INSERT INTO chunks (issue_number, chunk_type, language, content, embedding, weight, is_solution)
-VALUES (%s, %s, %s, %s, %s, %s, %s)
+INSERT INTO chunks (issue_number, chunk_type, language, content, embedding, weight, is_solution, issue_created_at)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT (issue_number, chunk_type, content) DO UPDATE
-    SET embedding   = EXCLUDED.embedding,
-        weight      = EXCLUDED.weight,
-        is_solution = EXCLUDED.is_solution;
+    SET embedding        = EXCLUDED.embedding,
+        weight           = EXCLUDED.weight,
+        is_solution      = EXCLUDED.is_solution,
+        issue_created_at = EXCLUDED.issue_created_at;
 """
 
 SEARCH_SQL = """
@@ -55,12 +58,14 @@ class VectorStore:
             cur.execute(CREATE_SQL)
         self.conn.commit()
 
-    def upsert(self, chunks: list[Chunk], vectors: list[list[float]], is_solution: bool = False):
+    def upsert(self, chunks: list[Chunk], vectors: list[list[float]],
+               is_solution: bool = False,
+               issue_created_at: datetime.datetime | None = None):
         """청크와 벡터를 함께 저장. 동일 (issue_number, chunk_type, content) 존재 시 덮어씀"""
         with self.conn.cursor() as cur:
             psycopg2.extras.execute_batch(cur, UPSERT_SQL,
                 [(c.metadata.get("issue_number"), c.chunk_type, c.language,
-                  c.content, vec, c.metadata.get("weight", 1.0), is_solution)
+                  c.content, vec, c.metadata.get("weight", 1.0), is_solution, issue_created_at)
                  for c, vec in zip(chunks, vectors)])
         self.conn.commit()
 
