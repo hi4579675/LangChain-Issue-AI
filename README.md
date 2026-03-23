@@ -1,6 +1,6 @@
 # LangChain Issue AI
 
-> LangChain GitHub 이슈 20,000+개를 벡터화한 트러블슈팅 RAG 시스템
+> LangChain GitHub 이슈 9200+개를 벡터화한 트러블슈팅 RAG 시스템
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green)
