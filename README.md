@@ -21,6 +21,12 @@ LangChain을 쓰다 보면 공식 문서에 없는 에러를 자주 만납니다
 
 ---
 
+## 데모
+
+https://github.com/user-attachments/assets/4cf20962-5e2c-48a1-8950-ef09874c978d
+
+---
+
 ## 주요 기능
 
 - **에러 메시지 / 자연어 질문** → 관련 GitHub 이슈 기반 답변 생성
