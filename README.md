@@ -5,6 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green)
 ![pgvector](https://img.shields.io/badge/pgvector-PostgreSQL-336791)
+![Gemini](https://img.shields.io/badge/Gemini-Google_AI-4285F4)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
@@ -25,6 +26,10 @@ LangChain을 쓰다 보면 공식 문서에 없는 에러를 자주 만납니다
 
 https://github.com/user-attachments/assets/4cf20962-5e2c-48a1-8950-ef09874c978d
 
+## 스크린샷
+
+![Streamlit UI](assets/screenshot.png)
+
 ---
 
 ## 주요 기능
@@ -33,7 +38,7 @@ https://github.com/user-attachments/assets/4cf20962-5e2c-48a1-8950-ef09874c978d
 - **출처 링크 제공** — 어떤 이슈 번호에서 답변했는지 함께 반환
 - **코드블록 분리 청킹** — 코드와 텍스트를 별도 청크로 관리, 코드 예제 우선 반환
 - **Hybrid Reranking** — 벡터 유사도 × 키워드 매칭 × solution 가중치 × 최신성 점수
-- **베이스라인 비교** — 검색 구성별 ablation + Gemini Flash 리랭커와 지표 비교
+- **베이스라인 비교** — 검색 구성별 ablation + Gemini 2.5/1.5 Flash 리랭커와 지표 비교
 - **자동 동기화** — `/sync` API로 최신 이슈 주기적 반영
 
 ---
@@ -127,9 +132,9 @@ GitHub는 인증 요청을 시간당 5,000개로 제한합니다. 매 응답의 
 | C. +solution 가중치 | 0.785 | 0.830 | 0.753 | 0.769 |
 | D. +최신성 점수 (full hybrid) | 0.785 | 0.825 | 0.742 | 0.761 |
 | E. Gemini 2.5 Flash 리랭커 | 0.660 | 0.720 | 0.616 | 0.642 |
-| F. Gemini Flash Lite 리랭커 | 0.545 | 0.585 | 0.525 | 0.540 |
+| F. Gemini 1.5 Flash 리랭커 | 0.545 | 0.585 | 0.525 | 0.540 |
 
-> E·F는 `GEMINI_API_KEY`만 있으면 실행됩니다. G(Groq)는 [console.groq.com](https://console.groq.com) 무료 가입 후 `GROQ_API_KEY` 설정 필요.
+> E·F는 `GEMINI_API_KEY`만 있으면 실행됩니다. Groq 리랭커(G)는 [console.groq.com](https://console.groq.com) 무료 가입 후 `GROQ_API_KEY` 설정 시 추가 측정 가능.
 
 > **분석:**
 > - **키워드 매칭(B)이 최고 성능** — 벡터 단독 대비 Hit@3 +18.4%, MRR +36.8%
@@ -216,7 +221,7 @@ langchain-issue-ai/
 ├── eval/                       # 평가 모듈
 │   ├── metrics.py              # Hit@k, MRR, NDCG
 │   ├── dataset.py              # 평가셋 구성
-│   └── compare.py              # 검색 구성 ablation + Gemini Flash 리랭커 비교
+│   └── compare.py              # 검색 구성 ablation + Gemini 2.5/1.5 Flash 리랭커 비교
 │
 ├── frontend/
 │   └── app.py                  # Streamlit UI
@@ -276,7 +281,7 @@ GitHub에서 최신 이슈를 백그라운드로 동기화합니다.
 
 ```bash
 python -m eval.metrics   # Hit@k, MRR, NDCG 측정
-python -m eval.compare   # 검색 구성 ablation + Gemini Flash 리랭커 비교
+python -m eval.compare   # 검색 구성 ablation + Gemini 2.5/1.5 Flash 리랭커 비교
 ```
 
 ---
